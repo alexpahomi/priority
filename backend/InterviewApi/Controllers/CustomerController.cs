@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using InterviewApi.Models;
-using System.Text.Json;
+using InterviewApi.Services;
 
 namespace InterviewApi.Controllers;
 
@@ -8,8 +8,6 @@ namespace InterviewApi.Controllers;
 [Route("api/[controller]")]
 public class CustomerController : ControllerBase
 {
-    private readonly string _dataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "customers.json");
-
     /// <summary>
     /// Welcome endpoint - returns a welcome message
     /// </summary>
@@ -33,61 +31,14 @@ public class CustomerController : ControllerBase
         });
     }
 
-    [HttpGet("test")]
-    public ActionResult<object> Test()
-    {
-        return Ok(new
-        {
-            message = System.IO.File.Exists(_dataPath) ? "Data file found." : "Data file not found.",
-        });
-    }
-
     /// <summary>
     /// Get all customers
     /// </summary>
     [HttpGet]
     public ActionResult<List<Customer>> GetCustomers()
     {
-        var customers = ReadCustomersFromJson();
+        var customers = DataService.ReadCustomersFromJson();
         return Ok(customers);
-    }
-    
-    /// <summary>
-    /// Helper method to read customers from JSON file
-    /// </summary>
-    private List<Customer> ReadCustomersFromJson()
-    {
-        try
-        {
-            if (!System.IO.File.Exists(_dataPath))
-                return new List<Customer>();
-
-            var json = System.IO.File.ReadAllText(_dataPath);
-            var data = JsonSerializer.Deserialize<CustomerData>(json, new JsonSerializerOptions{ PropertyNameCaseInsensitive = true });
-            
-            return data?.Customers ?? new List<Customer>();
-        }
-        catch
-        {
-            return new List<Customer>();
-        }
-    }
-
-    /// <summary>
-    /// Helper method to write customers to JSON file
-    /// </summary>
-    private void WriteCustomersToJson(List<Customer> customers)
-    {
-        try
-        {
-            var data = new CustomerData { Customers = customers };
-            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-            System.IO.File.WriteAllText(_dataPath, json);
-        }
-        catch
-        {
-            // Handle error as needed
-        }
     }
 
     // TODO: Implement this endpoint
@@ -95,7 +46,7 @@ public class CustomerController : ControllerBase
     // POST /api/customer
     // Request body: { "name": "John Doe", "email": "john@example.com" }
     // Response: Created customer with ID
-    
+
     [HttpPost]
     public ActionResult<Customer> AddCustomer([FromBody] Customer customer)
     {
@@ -116,16 +67,16 @@ public class CustomerController : ControllerBase
         {
             return BadRequest(new { error = "Invalid email format" });
         }
-        
-        var customers = ReadCustomersFromJson();        
+
+        var customers = DataService.ReadCustomersFromJson();
         customer.Id = customers.Count > 0 ? customers.Max(c => c.Id) + 1 : 1;
-        
+
         customer.RegistrationDate = DateTime.Now;
         customer.TotalPurchases = 0;
-        
+
         customers.Add(customer);
-        
-        WriteCustomersToJson(customers);        
+
+        DataService.WriteCustomersToJson(customers);
 
         return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
     }
@@ -144,7 +95,7 @@ public class CustomerController : ControllerBase
         // 3. Return 404 if not found: if (customer == null) return NotFound();
         // 4. Return customer if found: return Ok(customer);
 
-        var customers = ReadCustomersFromJson();
+        var customers = DataService.ReadCustomersFromJson();
         var customer = customers.FirstOrDefault(c => c.Id == id);
         if (customer == null)
             return NotFound(new { error = $"Customer with ID {id} not found" });
@@ -163,7 +114,7 @@ public class CustomerController : ControllerBase
     // Example: A customer visiting "Grand Hotel" every Monday throughout October (even if they have 1 visit on Sunday)
 
     [HttpGet("loyal")]
-    public ActionResult<List<Customer>> GetLoyalCustomers([FromQuery] DateTime? date)
+    public ActionResult<List<Customer>> GetLoyalCustomers([FromQuery] string date)
     {
         // Your implementation here:
         // 1. Use date parameter (or default to DateTime.Now): var targetDate = date ?? DateTime.Now;
@@ -172,11 +123,20 @@ public class CustomerController : ControllerBase
         // 4. Filter customers by loyalty:
         // 5. Return list of loyal customers: return Ok(loyalCustomers);
 
-        var targetDate = date ?? DateTime.Now;
+        // v1 - full date recieved
+        // var targetDate = date ?? DateTime.Now;
+
+        // v2 - parse date in MM/yyyy format
+        DateTime targetDate;
+        if (!DateTime.TryParseExact(date, "MM/yyyy", null, System.Globalization.DateTimeStyles.None, out targetDate))
+        {
+            targetDate = DateTime.Now; // default to current date if parsing failed
+        }
+
         var targetMonth = new DateTime(targetDate.Year, targetDate.Month, 1);
 
-        var customers = ReadCustomersFromJson();
-        var visitations = ReadVisitationsFromJson();
+        var customers = DataService.ReadCustomersFromJson();
+        var visitations = DataService.ReadVisitationsFromJson();
 
         var monthVisitations = visitations
             .Where(v => v.VisitDate.Year == targetMonth.Year && v.VisitDate.Month == targetMonth.Month)
@@ -189,7 +149,7 @@ public class CustomerController : ControllerBase
 
         var loyalCustomerIds = new HashSet<int>();
         var expectedDayOfWeekCounts = CalculateExpectedDayOfWeekCounts(targetMonth, targetMonth.Year == DateTime.Now.Year && targetMonth.Month == DateTime.Now.Month);
-        
+
         foreach (var group in customerHotelGroups)
         {
             // v1 - initially required week day visits >= 4 (actualCount >= 4)
@@ -236,7 +196,7 @@ public class CustomerController : ControllerBase
 
         return Ok(loyalCustomers);
     }
-    
+
     /// <summary>
     /// Helper method to calculate how many times each day of week occurs in a month
     /// For current month, counts only up to today
@@ -264,27 +224,6 @@ public class CustomerController : ControllerBase
         return counts;
     }
 
-    /// <summary>
-    /// Helper method to read visitations from JSON file
-    /// </summary>
-    private List<Visitation> ReadVisitationsFromJson()
-    {
-        try
-        {
-            var visitationsPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "visitations.json");
-            if (!System.IO.File.Exists(visitationsPath))
-                return new List<Visitation>();
-
-            var json = System.IO.File.ReadAllText(visitationsPath);
-            var data = JsonSerializer.Deserialize<VisitationData>(json);
-            return data?.Visitations ?? new List<Visitation>();
-        }
-        catch
-        {
-            return new List<Visitation>();
-        }
-    }
-
     // TODO: Implement this endpoint
     // Register a customer at a specific date
     // POST /api/customer/register
@@ -306,25 +245,25 @@ public class CustomerController : ControllerBase
         if (string.IsNullOrWhiteSpace(customer.Name) || string.IsNullOrWhiteSpace(customer.Email))
         {
             return BadRequest(new { error = "Name and email are required" });
-        } 
+        }
         else if (!customer.Email.Contains('@'))
         {
             return BadRequest(new { error = "Invalid email format" });
         }
 
-        var customers = ReadCustomersFromJson();
-        
+        var customers = DataService.ReadCustomersFromJson();
+
         customer.Id = customers.Count > 0 ? customers.Max(c => c.Id) + 1 : 1;
         customer.TotalPurchases = 0;
         if (customer.RegistrationDate == default)
         {
             customer.RegistrationDate = DateTime.Now;
         }
-        
+
         customers.Add(customer);
 
-        WriteCustomersToJson(customers);
-        
+        DataService.WriteCustomersToJson(customers);
+
         return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
     }
 }

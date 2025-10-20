@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using InterviewApi.Models;
-using System.Text.Json;
+using InterviewApi.Services;
 
 namespace InterviewApi.Controllers;
 
@@ -8,15 +8,35 @@ namespace InterviewApi.Controllers;
 [Route("api/[controller]")]
 public class VisitController : ControllerBase
 {
-    private readonly string _visitationsDataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "visitations.json");
 
-    /// <summary>
-    /// Get all visits for a specific customer by customer ID
-    /// </summary>
+    // <summary>
+    // Get all visits with customer details(id, name) and hotel name
+    // </summary>
+    [HttpGet]
+    public ActionResult<List<object>> GetAllVisits()
+    {
+        var visitations = DataService.ReadVisitationsFromJson();
+        var customers = DataService.ReadCustomersFromJson();
+        var hotels = DataService.ReadHotelsFromJson();
+
+        var result = visitations.Select(v => new
+        {
+            v.Id,
+            Customer = customers.FirstOrDefault(c => c.Id == v.CustomerId),
+            Hotel = hotels.FirstOrDefault(h => h.Id == v.HotelId),
+            v.VisitDate
+        }).ToList();
+
+        return Ok(result);
+    }
+
+    // <summary>
+    // Get all visits for a specific customer by customer ID
+    // </summary>
     [HttpGet("{customerId}")]
     public ActionResult<List<Visitation>> GetVisitsForCustomer(int customerId)
     {
-        var visitations = ReadVisitationsFromJson();
+        var visitations = DataService.ReadVisitationsFromJson();
         var customerVisits = visitations.Where(v => v.CustomerId == customerId).ToList();
 
         if (!customerVisits.Any())
@@ -27,9 +47,9 @@ public class VisitController : ControllerBase
         return Ok(customerVisits);
     }
 
-    /// <summary>
-    /// Add a new visit for a specific customer
-    /// </summary>
+    // <summary>
+    // Add a new visit for a specific customer
+    // </summary>
     [HttpPost]
     public ActionResult<Visitation> AddVisitForCustomer([FromBody] Visitation visitation)
     {
@@ -39,7 +59,7 @@ public class VisitController : ControllerBase
             return BadRequest(new { error = "Customer ID, Hotel ID, and Visit Date are required" });
         }
 
-        var visitations = ReadVisitationsFromJson();
+        var visitations = DataService.ReadVisitationsFromJson();
 
         // Generate a new ID for the visitation
         visitation.Id = visitations.Count > 0 ? visitations.Max(v => v.Id) + 1 : 1;
@@ -48,45 +68,8 @@ public class VisitController : ControllerBase
         visitations.Add(visitation);
 
         // Write the updated visitations list to the JSON file
-        WriteVisitationsToJson(visitations);
+        DataService.WriteVisitationsToJson(visitations);
 
         return CreatedAtAction(nameof(GetVisitsForCustomer), new { customerId = visitation.CustomerId }, visitation);
-    }
-
-    /// <summary>
-    /// Helper method to read visitations from JSON file
-    /// </summary>
-    private List<Visitation> ReadVisitationsFromJson()
-    {
-        try
-        {
-            if (!System.IO.File.Exists(_visitationsDataPath))
-                return new List<Visitation>();
-
-            var json = System.IO.File.ReadAllText(_visitationsDataPath);
-            var data = JsonSerializer.Deserialize<VisitationData>(json);
-            return data?.Visitations ?? new List<Visitation>();
-        }
-        catch
-        {
-            return new List<Visitation>();
-        }
-    }
-
-    /// <summary>
-    /// Helper method to write visitations to JSON file
-    /// </summary>
-    private void WriteVisitationsToJson(List<Visitation> visitations)
-    {
-        try
-        {
-            var data = new VisitationData { Visitations = visitations };
-            var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
-            System.IO.File.WriteAllText(_visitationsDataPath, json);
-        }
-        catch
-        {
-            // Handle error if needed
-        }
     }
 }

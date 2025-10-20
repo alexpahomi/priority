@@ -23,6 +23,7 @@ priority-interview/
 ## Setup Instructions
 
 ### Backend (.NET Core 8)
+
 1. Navigate to backend folder:
    ```bash
    cd backend/InterviewApi
@@ -39,6 +40,7 @@ priority-interview/
 5. Swagger UI available at: **http://localhost:5000/swagger**
 
 ### Frontend (React)
+
 1. Navigate to frontend folder:
    ```bash
    cd frontend
@@ -49,18 +51,20 @@ priority-interview/
    ```
 3. Run the development server:
    ```bash
-   npm start
+   npm run dev
    ```
-4. App will open on: **http://localhost:3000**
+4. App will open on: **http://localhost:3000/**
 
 ## API Endpoints
 
 ### Current Endpoints
 
 #### GET `/api/assignment`
+
 Returns the interview assignment details.
 
 #### GET `/api/customer/welcome`
+
 Returns a welcome message and list of available endpoints.
 
 ### TODO: Implement These Endpoints
@@ -77,6 +81,7 @@ See `backend/InterviewApi/Controllers/CustomerController.cs` for detailed commen
 ## Project Structure
 
 ### Backend
+
 ```
 InterviewApi/
 ├── Controllers/
@@ -92,6 +97,7 @@ InterviewApi/
 ```
 
 **Your Task**: Build a complete Hotel Visitation Management System:
+
 - **Frontend**: Customer profile page, visitations grid, register visit modal
 - **Backend**: Customer creation, visit registration, loyal customers API
 - **Data**: Use provided JSON files as data sources
@@ -115,8 +121,8 @@ InterviewApi/
 
 ```javascript
 const routes = [
-  { path: '/', name: 'Home', component: Welcome },
-  { path: '/about', name: 'About', component: About }
+  { path: "/", name: "Home", component: Welcome },
+  { path: "/about", name: "About", component: About },
 ];
 ```
 
@@ -125,7 +131,6 @@ The navigation will automatically update to include your new page!
 ## Technologies Used
 
 - **Backend**: .NET Core 8, ASP.NET Core Web API
-- **Frontend**: React 18, React Router
+- **Frontend**: React 19, React Router v7 - **https://reactrouter.com/upgrading/v6**
 - **Styling**: CSS3
 - **API Documentation**: Swagger/OpenAPI
-
