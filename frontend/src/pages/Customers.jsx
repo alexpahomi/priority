@@ -1,17 +1,14 @@
-import { Await, useLoaderData } from "react-router";
-import CustomersList from "../components/CustomersList";
+import { Await, Link, useLoaderData } from "react-router";
 import { Suspense } from "react";
+import CustomersGrid from "../components/CustomersGrid";
 
 function CustomersPage() {
-  const data = useLoaderData();
-  
-  const customers = data.customers;
+  const { customers } = useLoaderData();
 
   return (
     <Suspense fallback={<p style={{ textAlign: "center" }}>Loading...</p>}>
       <Await resolve={customers}>
-        {/* todo add filter */}
-        {(loadedCustomers) => <CustomersList customers={loadedCustomers} />}
+        {(loadedCustomers) => <CustomersGrid customers={loadedCustomers} />}
       </Await>
     </Suspense>
   );
@@ -20,7 +17,7 @@ function CustomersPage() {
 export default CustomersPage;
 
 async function loadCustomers() {
-  const response = await fetch("http://localhost:5000/api/customers");
+  const response = await fetch("http://localhost:5000/api/customer");
 
   if (!response.ok) {
     throw {
@@ -29,7 +26,8 @@ async function loadCustomers() {
     };
   } else {
     const resData = await response.json();
-    return resData.customers;
+
+    return resData;
   }
 }
 

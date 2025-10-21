@@ -1,5 +1,5 @@
 import { Outlet, useNavigation } from "react-router";
-import MainNavigation from "../components/MainNavigation";
+import MainNavigation from "../components/Navigation";
 
 export default function RootLayout() {
   return (

@@ -36,3 +36,6 @@
   background-color: #34495e;
 }
 
+.nav-list a.active {
+  font-weight: bold;
+}

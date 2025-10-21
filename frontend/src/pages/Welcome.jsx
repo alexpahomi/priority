@@ -1,25 +1,25 @@
-import React, { useState, useEffect } from 'react';
-import './Welcome.css';
+import React, { useState, useEffect } from "react";
+import classes from "./Welcome.module.css";
 
-function Welcome() {
+export default function Welcome() {
   const [assignment, setAssignment] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
     // Fetch the interview assignment from the backend API
-    fetch('http://localhost:5000/api/assignment')
-      .then(response => {
+    fetch("http://localhost:5000/api/assignment")
+      .then((response) => {
         if (!response.ok) {
-          throw new Error('Failed to fetch assignment');
+          throw new Error("Failed to fetch assignment");
         }
         return response.json();
       })
-      .then(data => {
+      .then((data) => {
         setAssignment(data);
         setLoading(false);
       })
-      .catch(err => {
+      .catch((err) => {
         setError(err.message);
         setLoading(false);
       });
@@ -28,19 +28,31 @@ function Welcome() {
   // Format the description text with proper line breaks and styling
   const formatDescription = (text) => {
     if (!text) return null;
-    
-    return text.split('\n').map((line, index) => {
+
+    return text.split("\n").map((line, index) => {
       // Check if line is a heading (starts with numbers or **text**)
       if (line.match(/^\d+\./)) {
-        return <h3 key={index} className="section-heading">{line}</h3>;
+        return (
+          <h3 key={index} className={classes["section-heading"]}>
+            {line}
+          </h3>
+        );
       }
       if (line.match(/^\*\*/)) {
-        return <h4 key={index} className="subsection-heading">{line.replace(/\*\*/g, '')}</h4>;
+        return (
+          <h4 key={index} className={classes["subsection-heading"]}>
+            {line.replace(/\*\*/g, "")}
+          </h4>
+        );
       }
-      if (line.trim() === '') {
+      if (line.trim() === "") {
         return <br key={index} />;
       }
-      return <p key={index} className="description-line">{line}</p>;
+      return (
+        <p key={index} className={classes["description-line"]}>
+          {line}
+        </p>
+      );
     });
   };
 
@@ -58,33 +70,37 @@ function Welcome() {
         <div className="error">
           <h2>Error</h2>
           <p>{error}</p>
-          <p>Make sure the backend server is running on http://localhost:5000</p>
+          <p>
+            Make sure the backend server is running on
+            <a href="http://localhost:5000">http://localhost:5000</a>
+          </p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="welcome-container">
-      <div className="welcome-header">
+    <div className={classes["welcome-container"]}>
+      <div className={classes["welcome-header"]}>
         <h1>{assignment?.title}</h1>
-        <div className="assignment-meta">
-          <span className="duration">⏱️ Duration: {assignment?.duration}</span>
-          <span className="contact">📧 Contact: {assignment?.contact}</span>
+        <div className={classes["assignment-meta"]}>
+          <span className={classes.duration}>
+            ⏱️ Duration: {assignment?.duration}
+          </span>
+          <span className={classes.contact}>
+            📧 Contact: {assignment?.contact}
+          </span>
         </div>
       </div>
-      
-      <div className="assignment-content">
+
+      <div className={classes["assignment-content"]}>
         {formatDescription(assignment?.description)}
       </div>
 
-      <div className="welcome-footer">
+      <div className={classes["welcome-footer"]}>
         <p>This assignment is fetched from the .NET Core 8 backend API</p>
         <code>GET http://localhost:5000/api/assignment</code>
       </div>
     </div>
   );
 }
-
-export default Welcome;
-

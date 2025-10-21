@@ -1,55 +1,47 @@
 import { RouterProvider } from "react-router/dom";
 import { createBrowserRouter } from "react-router";
 
-import "./App.css";
-
-import ErrorPage from "./pages/ErrorPage";
-import RootLayout from "./pages/RootLayout";
 import Welcome from "./pages/Welcome";
-import CustomersPage, { customersLoader } from "./pages/CustomersPage";
-import CustomerDetailPage, {
-  loader as customerDetailLoader,
-} from "./pages/CustomerDetailPage";
+import RootLayout from "./pages/RootLayout";
+import ErrorPage from "./pages/Error";
+import CustomersPage, { loader as customersLoader } from "./pages/Customers";
+import CustomerProfilePage, {
+  loader as customerProfileLoader,
+} from "./pages/CustomerProfile";
+import AnalyticsPage from "./pages/Analytics";
+
+import "./App.css";
 
 const router = createBrowserRouter([
   {
     path: "/",
     element: <RootLayout />,
     errorElement: <ErrorPage />,
-    id: "root",
     children: [
       { index: true, element: <Welcome /> },
       {
         path: "customers",
-        children: [
-          {
-            index: true,
-            element: <CustomersPage />,
-            loader: customersLoader,
-          },
-          {
-            path: ":customerId",
-            id: "customer-detail",
-            loader: customerDetailLoader,
-            children: [
-              {
-                index: true,
-                element: <CustomerDetailPage />,
-              },
-            ],
-          },
-        ],
+        element: <CustomersPage />,
+        loader: customersLoader,
+      },
+      { path: "customers/profile/", element: <CustomerProfilePage /> },
+      {
+        path: "customers/profile/:customerId",
+        element: <CustomerProfilePage />,
+        loader: customerProfileLoader,
+      },
+      {
+        path: "analytics",
+        element: <AnalyticsPage />,
       },
     ],
   },
 ]);
 
-function App() {
+export default function App() {
   return (
     <div className="app">
       <RouterProvider router={router} />
     </div>
   );
 }
-
-export default App;
