@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState } from "react";
 import classes from "./DatePicker.module.css";
 
 const supportsMonthInput = (() => {
@@ -49,7 +49,8 @@ export default function DatePicker({ selectedDate, onDateChange, ...props }) {
   }
 
   const picker = supportsMonthInput ? (
-    <input className={classes.nativeDatePicker}
+    <input
+      className={classes.nativeDatePicker}
       type="month"
       id="month-visit"
       name="month-visit"
