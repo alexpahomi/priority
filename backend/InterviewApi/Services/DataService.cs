@@ -10,7 +10,6 @@ public class DataService
     private static readonly string _visitationsDataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "visitations.json");
     private static readonly string _customersDataPath = Path.Combine(Directory.GetCurrentDirectory(), "Data", "customers.json");
 
-
     /// <summary>
     /// Helper method to read hotels from JSON file
     /// </summary>

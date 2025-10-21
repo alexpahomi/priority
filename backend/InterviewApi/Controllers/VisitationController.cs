@@ -47,6 +47,69 @@ public class VisitController : ControllerBase
         return Ok(customerVisits);
     }
 
+    /// <summary>
+    /// Get filtered visits based on query parameters: hotelIds, month, onlyLoyal
+    /// </summary>
+    [HttpGet("filtered")]
+    public ActionResult<List<object>> GetFilteredVisits([FromQuery] string? hotelIds, [FromQuery] string? month, [FromQuery] bool onlyLoyal = false)
+    {
+        var visitations = DataService.ReadVisitationsFromJson();
+        var customers = DataService.ReadCustomersFromJson();
+        var hotels = DataService.ReadHotelsFromJson();
+
+        // Filter by month if provided
+        if (!string.IsNullOrEmpty(month))
+        {
+            DateTime targetDate;
+            if (DateTime.TryParseExact(month, "MM/yyyy", null, System.Globalization.DateTimeStyles.None, out targetDate))
+            {
+                visitations = visitations
+                    .Where(v => v.VisitDate.Year == targetDate.Year && v.VisitDate.Month == targetDate.Month)
+                    .ToList();
+            }
+        }
+
+        // Filter by hotel IDs if provided
+        if (!string.IsNullOrEmpty(hotelIds))
+        {
+            var hotelIdList = hotelIds.Split(',').Select(int.Parse).ToList();
+            visitations = visitations.Where(v => hotelIdList.Contains(v.HotelId)).ToList();
+        }
+
+        // Filter by loyal customers if checkbox is checked
+        if (onlyLoyal)
+        {
+            DateTime targetMonth;
+            if (!string.IsNullOrEmpty(month) && DateTime.TryParseExact(month, "MM/yyyy", null, System.Globalization.DateTimeStyles.None, out targetMonth))
+            {
+                targetMonth = new DateTime(targetMonth.Year, targetMonth.Month, 1);
+            }
+            else
+            {
+                targetMonth = new DateTime(DateTime.Now.Year, DateTime.Now.Month, 1);
+            }
+
+            var loyalCustomerIds = LoyalCustomerService.GetLoyalCustomerIds(targetMonth);
+            visitations = visitations.Where(v => loyalCustomerIds.Contains(v.CustomerId)).ToList();
+        }
+
+        // Build result with customer and hotel details
+        var result = visitations
+            .OrderBy(v => v.VisitDate)
+            .Select(v => new
+            {
+                v.Id,
+                CustomerId = v.CustomerId,
+                CustomerName = customers.FirstOrDefault(c => c.Id == v.CustomerId)?.Name ?? "Unknown",
+                HotelId = v.HotelId,
+                HotelName = hotels.FirstOrDefault(h => h.Id == v.HotelId)?.Name ?? "Unknown",
+                VisitDate = v.VisitDate
+            })
+            .ToList();
+
+        return Ok(result);
+    }
+
     // <summary>
     // Add a new visit for a specific customer
     // </summary>
