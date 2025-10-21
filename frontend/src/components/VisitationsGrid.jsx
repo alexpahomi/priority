@@ -24,19 +24,18 @@ export default function VisitationsGrid({ visits = [] }) {
                   </Link>
                 </td>
                 <td>{visit.hotelName}</td>
-                <td>{formatDate(visit.date)}</td>
+                <td>{formatDate(visit.visitDate)}</td>
               </tr>
             ))}
           </tbody>
         </table>
       )}
 
-      {!visits ||
-        (visits.length === 0 && (
-          <div className="alert alert-info text-center" role="alert">
-            <p className="mb-0">No visits found.</p>
-          </div>
-        ))}
+      {visits && visits.length === 0 && (
+        <div className="text-center py-5 text-muted">
+          <p>No visits found matching your criteria</p>
+        </div>
+      )}
     </>
   );
 }

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import DatePicker from "./DatePicker";
+import DatePicker from "./UI/DatePicker";
 
 export default function SearchPanel({ hotels = [], onSearch }) {
   const [selectedHotels, setSelectedHotels] = useState([]);
