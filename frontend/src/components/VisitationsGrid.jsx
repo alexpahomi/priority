@@ -1,7 +1,10 @@
 import { Link } from "react-router";
 import { formatDate } from "../utils/formatting";
 
-export default function VisitationsGrid({ visits = [] }) {
+export default function VisitationsGrid({
+  visits = [],
+  showCustomerData = true,
+}) {
   return (
     <>
       {visits && visits.length > 0 && (
@@ -9,7 +12,7 @@ export default function VisitationsGrid({ visits = [] }) {
           <thead className="table-dark">
             <tr>
               <th>Visit ID</th>
-              <th>Customer</th>
+              {showCustomerData && <th>Customer</th>}
               <th>Hotel</th>
               <th>Date</th>
             </tr>
@@ -18,11 +21,13 @@ export default function VisitationsGrid({ visits = [] }) {
             {visits.map((visit) => (
               <tr key={visit.id}>
                 <td>{visit.id}</td>
-                <td>
-                  <Link to={`/customers/profile/${visit.customerId}`}>
-                    {visit.customerName}
-                  </Link>
-                </td>
+                {showCustomerData && (
+                  <td>
+                    <Link to={`/customers/profile/${visit.customerId}`}>
+                      {visit.customerName}
+                    </Link>
+                  </td>
+                )}
                 <td>{visit.hotelName}</td>
                 <td>{formatDate(visit.visitDate)}</td>
               </tr>
@@ -33,7 +38,10 @@ export default function VisitationsGrid({ visits = [] }) {
 
       {visits && visits.length === 0 && (
         <div className="text-center py-5 text-muted">
-          <p>No visits found matching your criteria</p>
+          {showCustomerData && <p>No visits found matching your criteria</p>}
+          {!showCustomerData && (
+            <p>There are no visits for this customer yet.</p>
+          )}
         </div>
       )}
     </>

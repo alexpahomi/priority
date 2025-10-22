@@ -5,9 +5,7 @@ import Welcome from "./pages/Welcome";
 import RootLayout from "./pages/RootLayout";
 import ErrorPage from "./pages/Error";
 import CustomersPage, { loader as customersLoader } from "./pages/Customers";
-import CustomerProfilePage, {
-  loader as customerProfileLoader,
-} from "./pages/CustomerProfile";
+import CustomerProfilePage from "./pages/CustomerProfile";
 import AnalyticsPage from "./pages/Analytics";
 
 import "./App.css";
@@ -28,7 +26,6 @@ const router = createBrowserRouter([
       {
         path: "customers/profile/:customerId",
         element: <CustomerProfilePage />,
-        loader: customerProfileLoader,
       },
       {
         path: "analytics",

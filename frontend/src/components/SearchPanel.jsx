@@ -32,7 +32,7 @@ export default function SearchPanel({ hotels = [], onSearch }) {
   function handleSearch() {
     onSearch({
       hotelIds: selectedHotels,
-      selectedDate,
+      month: selectedDate,
       onlyLoyal,
     });
   }

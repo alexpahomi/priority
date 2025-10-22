@@ -186,5 +186,44 @@ public class CustomerController : ControllerBase
 
         return CreatedAtAction(nameof(GetCustomer), new { id = customer.Id }, customer);
     }
+
+    [HttpPut("{id}")]
+    public ActionResult<Customer> ReplaceCustomer(int id, [FromBody] Customer newCustomer)
+    {
+        var customers = DataService.ReadCustomersFromJson();
+        var customerIndex = customers.FindIndex(c => c.Id == id);
+        if (customerIndex == -1)
+            return NotFound(new { error = $"Customer with ID {id} not found" });
+
+        // Replace the entire customer record
+        newCustomer.Id = id; // Ensure the ID remains the same
+        customers[customerIndex] = newCustomer;
+
+        DataService.WriteCustomersToJson(customers);
+
+        return Ok(newCustomer);
+    }
+
+    [HttpPatch("{id}")]
+    public ActionResult<Customer> UpdateCustomer(int id, [FromBody] Customer updatedCustomer)
+    {
+        var customers = DataService.ReadCustomersFromJson();
+        var customer = customers.FirstOrDefault(c => c.Id == id);
+        if (customer == null)
+            return NotFound(new { error = $"Customer with ID {id} not found" });
+
+        // Update fields
+        if (!string.IsNullOrWhiteSpace(updatedCustomer.Name))
+            customer.Name = updatedCustomer.Name;
+        if (!string.IsNullOrWhiteSpace(updatedCustomer.Email))
+            customer.Email = updatedCustomer.Email;
+        if (updatedCustomer.RegistrationDate != default)
+            customer.RegistrationDate = updatedCustomer.RegistrationDate;
+        customer.TotalPurchases = updatedCustomer.TotalPurchases;
+
+        DataService.WriteCustomersToJson(customers);
+
+        return Ok(customer);
+    }
 }
 

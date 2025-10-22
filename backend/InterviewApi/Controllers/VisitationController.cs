@@ -37,6 +37,7 @@ public class VisitController : ControllerBase
     public ActionResult<List<Visitation>> GetVisitsForCustomer(int customerId)
     {
         var visitations = DataService.ReadVisitationsFromJson();
+        var hotels = DataService.ReadHotelsFromJson();
         var customerVisits = visitations.Where(v => v.CustomerId == customerId).ToList();
 
         if (!customerVisits.Any())
@@ -44,7 +45,18 @@ public class VisitController : ControllerBase
             return NotFound(new { error = $"No visitations found for customer with ID {customerId}" });
         }
 
-        return Ok(customerVisits);
+        var result = customerVisits
+            .OrderByDescending(v => v.VisitDate)
+            .Select(v => new
+            {
+                v.Id,
+                HotelId = v.HotelId,
+                HotelName = hotels.FirstOrDefault(h => h.Id == v.HotelId)?.Name ?? "Unknown",
+                VisitDate = v.VisitDate
+            })
+            .ToList();
+
+        return Ok(result);
     }
 
     /// <summary>

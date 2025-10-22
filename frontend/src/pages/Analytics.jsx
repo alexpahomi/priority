@@ -57,7 +57,9 @@ export default function Analytics() {
           params.append("hotelIds", filters.hotelIds.join(","));
         }
         if (filters.month) {
-          params.append("month", filters.month);
+          const date = new Date(filters.month);
+          const monthStr = String(date.getMonth() + 1).padStart(2, "0");
+          params.append("month", `${monthStr}/${date.getFullYear()}`);
         }
         if (filters.onlyLoyal) {
           params.append("onlyLoyal", "true");
@@ -92,7 +94,16 @@ export default function Analytics() {
     <>
       <h1>Analytics Page</h1>
       <p className="text-muted">Track and analyze customer hotel visits</p>
-      <SearchPanel hotels={hotels} onSearch={handleSearch} />
+      {hotelsLoading ? (
+        <div className="text-center py-5">
+          <div className="spinner-border text-primary" role="status">
+            <span className="visually-hidden">Loading...</span>
+          </div>
+          <p className="mt-3 text-muted">Loading hotels...</p>
+        </div>
+      ) : (
+        <SearchPanel hotels={hotels} onSearch={handleSearch} />
+      )}
 
       {hotelsError && (
         <ErrorAlert onDismiss={() => setHotelsError(null)}>
