@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import SearchPanel from "../components/SearchPanel";
 import VisitationsGrid from "../components/VisitationsGrid";
-import ErrorAlert from "../components/UI/ErrorAlert";
+import Alert from "../components/UI/Alert";
 
 export default function Analytics() {
   const [hotels, setHotels] = useState([]);
@@ -27,8 +27,9 @@ export default function Analytics() {
         const response = await fetch("http://localhost:5000/api/hotel", {
           signal: controller.signal,
         });
-        if (!response.ok) throw new Error("Failed to fetch hotels");
         const data = await response.json();
+        if (!response.ok)
+          throw new Error(date.error || "Failed to fetch hotels");
         setHotels(data);
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -69,9 +70,11 @@ export default function Analytics() {
           `http://localhost:5000/api/visit/filtered?${params.toString()}`,
           { signal: controller.signal }
         );
-        if (!response.ok) throw new Error("Failed to fetch visits");
-
+        
         const data = await response.json();
+        
+        if (!response.ok) throw new Error(data.error || "Failed to fetch visits");
+
         setVisits(data);
       } catch (err) {
         if (err.name !== "AbortError") {
@@ -106,15 +109,15 @@ export default function Analytics() {
       )}
 
       {hotelsError && (
-        <ErrorAlert onDismiss={() => setHotelsError(null)}>
+        <Alert type="danger" onDismiss={() => setHotelsError(null)}>
           {hotelsError}
-        </ErrorAlert>
+        </Alert>
       )}
 
       {visitsError && (
-        <ErrorAlert onDismiss={() => setVisitsError(null)}>
+        <Alert type="danger" onDismiss={() => setVisitsError(null)}>
           {visitsError}
-        </ErrorAlert>
+        </Alert>
       )}
 
       {visitsLoading ? (

@@ -5,7 +5,9 @@ import Welcome from "./pages/Welcome";
 import RootLayout from "./pages/RootLayout";
 import ErrorPage from "./pages/Error";
 import CustomersPage, { loader as customersLoader } from "./pages/Customers";
-import CustomerProfilePage from "./pages/CustomerProfile";
+import CustomerProfilePage, {
+  action as manipulateCustomerProfileAction,
+} from "./pages/CustomerProfile";
 import AnalyticsPage from "./pages/Analytics";
 
 import "./App.css";
@@ -22,10 +24,15 @@ const router = createBrowserRouter([
         element: <CustomersPage />,
         loader: customersLoader,
       },
-      { path: "customers/profile/", element: <CustomerProfilePage /> },
+      {
+        path: "customers/profile/",
+        element: <CustomerProfilePage />,
+        action: manipulateCustomerProfileAction,
+      },
       {
         path: "customers/profile/:customerId",
         element: <CustomerProfilePage />,
+        action: manipulateCustomerProfileAction,
       },
       {
         path: "analytics",

@@ -128,23 +128,17 @@ public class VisitController : ControllerBase
     [HttpPost]
     public ActionResult<Visitation> AddVisitForCustomer([FromBody] Visitation visitation)
     {
-        // Validate the visitation data
         if (visitation.CustomerId == 0 || visitation.HotelId == 0 || visitation.VisitDate == default)
         {
             return BadRequest(new { error = "Customer ID, Hotel ID, and Visit Date are required" });
         }
 
         var visitations = DataService.ReadVisitationsFromJson();
-
-        // Generate a new ID for the visitation
         visitation.Id = visitations.Count > 0 ? visitations.Max(v => v.Id) + 1 : 1;
-
-        // Add the new visitation
         visitations.Add(visitation);
 
-        // Write the updated visitations list to the JSON file
         DataService.WriteVisitationsToJson(visitations);
 
-        return CreatedAtAction(nameof(GetVisitsForCustomer), new { customerId = visitation.CustomerId }, visitation);
+        return StatusCode(201, visitation);
     }
 }
