@@ -131,7 +131,10 @@ export default function SearchPanel({ hotels = [], onSearch }) {
                 onChange={(e) => setOnlyLoyal(e.target.checked)}
               />
               <label className="form-check-label" htmlFor="loyalCheck">
-                Show Loyal Customers Only
+                Show Loyal Customers Only <br />
+                <small className="text-muted fst-italic">
+                  (the current month and year will be used by default)
+                </small>
               </label>
             </div>
           </div>
