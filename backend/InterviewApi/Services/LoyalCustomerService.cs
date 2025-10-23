@@ -17,6 +17,82 @@ public static class LoyalCustomerService
             .Where(v => v.VisitDate.Year == targetMonth.Year && v.VisitDate.Month == targetMonth.Month)
             .ToList();
 
+        return FindLoyalCustomersInVisitations(monthVisitations, targetMonth);
+    }
+
+    /// <summary>
+    /// Finds all loyal customers across all months in the dataset
+    /// Returns customers who were loyal in at least one month
+    /// </summary>
+    public static List<int> GetAllLoyalCustomerIds()
+    {
+        var visitations = DataService.ReadVisitationsFromJson();
+        
+        if (!visitations.Any())
+            return new List<int>();
+
+        // Group visitations by year-month
+        var visitationsByMonth = visitations
+            .GroupBy(v => new { v.VisitDate.Year, v.VisitDate.Month })
+            .ToList();
+
+        var allLoyalCustomers = new HashSet<int>();
+
+        // Check each month independently
+        foreach (var monthGroup in visitationsByMonth)
+        {
+            var targetMonth = new DateTime(monthGroup.Key.Year, monthGroup.Key.Month, 1);
+            var loyalInMonth = FindLoyalCustomersInVisitations(monthGroup.ToList(), targetMonth);
+            
+            foreach (var customerId in loyalInMonth)
+            {
+                allLoyalCustomers.Add(customerId);
+            }
+        }
+
+        return allLoyalCustomers.ToList();
+    }
+
+    /// <summary>
+    /// Gets detailed loyalty information for all customers across all months
+    /// Returns a dictionary with customer IDs and the months they were loyal
+    /// </summary>
+    public static Dictionary<int, List<DateTime>> GetLoyalCustomersByMonth()
+    {
+        var visitations = DataService.ReadVisitationsFromJson();
+        
+        if (!visitations.Any())
+            return new Dictionary<int, List<DateTime>>();
+
+        var visitationsByMonth = visitations
+            .GroupBy(v => new { v.VisitDate.Year, v.VisitDate.Month })
+            .ToList();
+
+        var customerLoyaltyByMonth = new Dictionary<int, List<DateTime>>();
+
+        foreach (var monthGroup in visitationsByMonth)
+        {
+            var targetMonth = new DateTime(monthGroup.Key.Year, monthGroup.Key.Month, 1);
+            var loyalInMonth = FindLoyalCustomersInVisitations(monthGroup.ToList(), targetMonth);
+            
+            foreach (var customerId in loyalInMonth)
+            {
+                if (!customerLoyaltyByMonth.ContainsKey(customerId))
+                {
+                    customerLoyaltyByMonth[customerId] = new List<DateTime>();
+                }
+                customerLoyaltyByMonth[customerId].Add(targetMonth);
+            }
+        }
+
+        return customerLoyaltyByMonth;
+    }
+
+    /// <summary>
+    /// Helper method that contains the core loyalty detection logic
+    /// </summary>
+    private static List<int> FindLoyalCustomersInVisitations(List<Visitation> monthVisitations, DateTime targetMonth)
+    {
         // group visitations by customer and hotel
         var customerHotelGroups = monthVisitations
             .GroupBy(v => new { v.CustomerId, v.HotelId })
