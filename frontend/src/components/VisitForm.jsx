@@ -80,7 +80,7 @@ export default function VisitForm({ customerId, onClose }) {
                 Visit Date
               </label>
               <input
-                type="datetime-local"
+                type="date"
                 id="visitDate"
                 name="visitDate"
                 className="form-control"
