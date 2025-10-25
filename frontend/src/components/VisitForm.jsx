@@ -1,36 +1,33 @@
 import { Form, useNavigation, useActionData } from "react-router";
-import { useEffect, useState } from "react";
+import { useFetch } from "../hooks/useFetch";
 import Alert from "./UI/Alert";
+import { useEffect, useRef } from "react";
+
+const getRequestConfig = {}; // defined ext because it's used as dependency in useFetch
 
 export default function VisitForm({ customerId, onClose }) {
   const data = useActionData();
   const navigation = useNavigation();
+  const formRef = useRef();
 
-  const [hotels, setHotels] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
-
-  useEffect(() => {
-    const fetchHotels = async () => {
-      try {
-        const response = await fetch("http://localhost:5000/api/Hotel");
-        if (!response.ok) throw new Error("Failed to load hotels");
-        const data = await response.json();
-        setHotels(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchHotels();
-  }, []);
+  const {
+    data: hotels,
+    isLoading: loading,
+    error,
+  } = useFetch("http://localhost:5000/api/Hotel", getRequestConfig, []);
 
   const isSubmitting = navigation.state === "submitting";
   const isVisitData = data && data.visitAdded;
 
+  // reset form after successful visit addition
+  useEffect(() => {
+    if (data?.visitAdded && formRef.current) {
+      formRef.current.reset();
+    }
+  }, [data]);
+
   return (
-    <Form method="post">
+    <Form method="post" ref={formRef}>
       <div className="modal-header">
         <h5 className="modal-title">Register New Visit</h5>
         <button

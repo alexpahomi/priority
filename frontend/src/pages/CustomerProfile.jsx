@@ -1,5 +1,5 @@
 import { redirect, useActionData, useParams } from "react-router";
-import { useState, useEffect, useRef } from "react";
+import { useEffect, useRef } from "react";
 import { useFetch } from "../hooks/useFetch";
 import Alert from "../components/UI/Alert";
 import CustomerForm from "../components/CustomerForm";
