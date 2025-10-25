@@ -1,60 +1,45 @@
-import React, { useState, useEffect } from "react";
+import { useFetch } from "../hooks/useFetch";
 import classes from "./Welcome.module.css";
 
-export default function Welcome() {
-  const [assignment, setAssignment] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+// Format the description text with proper line breaks and styling
+const formatDescription = (text) => {
+  if (!text) return null;
 
-  useEffect(() => {
-    // Fetch the interview assignment from the backend API
-    fetch("http://localhost:5000/api/assignment")
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error("Failed to fetch assignment");
-        }
-        return response.json();
-      })
-      .then((data) => {
-        setAssignment(data);
-        setLoading(false);
-      })
-      .catch((err) => {
-        setError(err.message);
-        setLoading(false);
-      });
-  }, []);
-
-  // Format the description text with proper line breaks and styling
-  const formatDescription = (text) => {
-    if (!text) return null;
-
-    return text.split("\n").map((line, index) => {
-      // Check if line is a heading (starts with numbers or **text**)
-      if (line.match(/^\d+\./)) {
-        return (
-          <h3 key={index} className={classes["section-heading"]}>
-            {line}
-          </h3>
-        );
-      }
-      if (line.match(/^\*\*/)) {
-        return (
-          <h4 key={index} className={classes["subsection-heading"]}>
-            {line.replace(/\*\*/g, "")}
-          </h4>
-        );
-      }
-      if (line.trim() === "") {
-        return <br key={index} />;
-      }
+  return text.split("\n").map((line, index) => {
+    // Check if line is a heading (starts with numbers or **text**)
+    if (line.match(/^\d+\./)) {
       return (
-        <p key={index} className={classes["description-line"]}>
+        <h3 key={index} className={classes["section-heading"]}>
           {line}
-        </p>
+        </h3>
       );
-    });
-  };
+    }
+    if (line.match(/^\*\*/)) {
+      return (
+        <h4 key={index} className={classes["subsection-heading"]}>
+          {line.replace(/\*\*/g, "")}
+        </h4>
+      );
+    }
+    if (line.trim() === "") {
+      return <br key={index} />;
+    }
+    return (
+      <p key={index} className={classes["description-line"]}>
+        {line}
+      </p>
+    );
+  });
+};
+
+const requestConfig = {}; // defined ext because it's used as dependency in useFetch
+
+export default function Welcome() {
+  const {
+    data: assignment,
+    isLoading: loading,
+    error,
+  } = useFetch("http://localhost:5000/api/assignment", requestConfig, null);
 
   if (loading) {
     return (
@@ -71,7 +56,7 @@ export default function Welcome() {
           <h2>Error</h2>
           <p>{error}</p>
           <p>
-            Make sure the backend server is running on
+            Make sure the backend server is running on &nbsp;
             <a href="http://localhost:5000">http://localhost:5000</a>
           </p>
         </div>
