@@ -1,10 +1,13 @@
 import { redirect, useActionData, useParams } from "react-router";
+import { useState, useEffect, useRef } from "react";
+import { useFetch } from "../hooks/useFetch";
 import Alert from "../components/UI/Alert";
 import CustomerForm from "../components/CustomerForm";
 import VisitationsGrid from "../components/VisitationsGrid";
-import { useState, useEffect, useRef } from "react";
 import Modal from "../components/UI/Modal";
 import VisitForm from "../components/VisitForm";
+
+const getRequestConfig = {}; // defined ext because it's used as dependency in useFetch
 
 export default function CustomerProfilePage() {
   const params = useParams();
@@ -12,94 +15,31 @@ export default function CustomerProfilePage() {
   const isNewProfile = !params.customerId;
   const visitModal = useRef();
 
-  const [customer, setCustomer] = useState({
+  // fetch customer data if editing existing profile using custom hook
+  const customerUrl = isNewProfile
+    ? null
+    : `http://localhost:5000/api/customer/${params.customerId}`;
+  const {
+    data: customer,
+    isLoading: customerLoading,
+    error: customerError,
+    clearError: clearCustomerError,
+  } = useFetch(customerUrl, getRequestConfig, {
     name: "",
     email: "",
     registrationDate: "",
   });
-  const [customerLoading, setCustomerLoading] = useState(!isNewProfile);
-  const [customerError, setCustomerError] = useState(null);
 
-  const [customerVisits, setCustomerVisits] = useState([]);
-  const [visitsLoading, setVisitsLoading] = useState(!isNewProfile);
-  const [visitsError, setVisitsError] = useState(null);
-
-  const [lastVisitAdded, setLastVisitAdded] = useState(null);
-
-  useEffect(() => {
-    const customerController = new AbortController();
-
-    const fetchCustomer = async (customer) => {
-      setCustomerLoading(true);
-      setCustomerError(null);
-      try {
-        const response = await fetch(
-          `http://localhost:5000/api/customer/${customer}`,
-          {
-            signal: customerController.signal,
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) throw new Error(data.error || "Customer not found");
-        setCustomer(data);
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          setCustomerError(err.message || "Failed to load customer");
-        }
-      } finally {
-        setCustomerLoading(false);
-      }
-    };
-
-    if (!isNewProfile) {
-      fetchCustomer(params.customerId);
-    }
-
-    return () => {
-      customerController.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    const visitsController = new AbortController();
-
-    const fetchCustomerVisits = async (customerId) => {
-      setVisitsLoading(true);
-      setVisitsError(null);
-      try {
-        const response = await fetch(
-          `http://localhost:5000/api/visit/${customerId}`,
-          {
-            signal: visitsController.signal,
-          }
-        );
-
-        const data = await response.json();
-
-        if (!response.ok) {
-          throw new Error(data.error || "Customer visits not found");
-        }
-
-        setCustomerVisits(data);
-      } catch (err) {
-        if (err.name !== "AbortError") {
-          setVisitsError(err.message || "Failed to load visits");
-        }
-      } finally {
-        setVisitsLoading(false);
-      }
-    };
-
-    if (!isNewProfile) {
-      fetchCustomerVisits(params.customerId);
-    }
-
-    return () => {
-      visitsController.abort();
-    };
-  }, [actionData?.visitAdded]);
+  // fetch customer visits if editing existing profile
+  const visitUrl = isNewProfile
+    ? null
+    : `http://localhost:5000/api/visit/${params.customerId}`;
+  const {
+    data: customerVisits,
+    isLoading: visitsLoading,
+    error: visitsError,
+    clearError: clearVisitsError,
+  } = useFetch(visitUrl, getRequestConfig, [], [actionData?.resData?.id]);
 
   useEffect(() => {
     if (actionData?.visitAdded) {
@@ -134,7 +74,7 @@ export default function CustomerProfilePage() {
 
       {customerLoading && <p>Loading customer data...</p>}
       {customerError && (
-        <Alert type="danger" onDismiss={() => setCustomerError(null)}>
+        <Alert type="danger" onDismiss={clearCustomerError}>
           {customerError}
         </Alert>
       )}
@@ -147,7 +87,7 @@ export default function CustomerProfilePage() {
 
       {visitsLoading && <p>Loading customer visits...</p>}
       {visitsError && (
-        <Alert type="info" onDismiss={() => setVisitsError(null)}>
+        <Alert type="info" onDismiss={clearVisitsError}>
           {visitsError}
         </Alert>
       )}
