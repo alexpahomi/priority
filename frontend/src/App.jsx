@@ -1,14 +1,16 @@
 import { RouterProvider } from "react-router/dom";
+import { lazy, Suspense } from "react";
 import { createBrowserRouter } from "react-router";
 
-import Welcome from "./pages/Welcome";
 import RootLayout from "./pages/RootLayout";
+
+const WelcomePage = lazy(() => import("./pages/Welcome"));
+const CustomersPage = lazy(() => import("./pages/Customers"));
+const AnalyticsPage = lazy(() => import("./pages/Analytics"));
+const CustomerProfilePage = lazy(() => import("./pages/CustomerProfile"));
+import {action as manipulateCustomerProfileAction} from "./pages/CustomerProfile";
+
 import ErrorPage from "./pages/Error";
-import CustomersPage, { loader as customersLoader } from "./pages/Customers";
-import CustomerProfilePage, {
-  action as manipulateCustomerProfileAction,
-} from "./pages/CustomerProfile";
-import AnalyticsPage from "./pages/Analytics";
 
 import "./App.css";
 
@@ -18,25 +20,25 @@ const router = createBrowserRouter([
     element: <RootLayout />,
     errorElement: <ErrorPage />,
     children: [
-      { index: true, element: <Welcome /> },
+      { index: true, element: <Suspense fallback={<p>Loading...</p>}><WelcomePage /></Suspense> },
       {
         path: "customers",
-        element: <CustomersPage />,
-        loader: customersLoader,
+        element: <Suspense fallback={<p>Loading...</p>}><CustomersPage /></Suspense>,
+        loader: () => import("./pages/Customers").then((module) => module.loader()),
       },
       {
         path: "customers/profile/",
-        element: <CustomerProfilePage />,
+        element: <Suspense fallback={<p>Loading...</p>}><CustomerProfilePage /></Suspense>,
         action: manipulateCustomerProfileAction,
       },
       {
         path: "customers/profile/:customerId",
-        element: <CustomerProfilePage />,
+        element: <Suspense fallback={<p>Loading...</p>}><CustomerProfilePage /></Suspense>,
         action: manipulateCustomerProfileAction,
       },
       {
         path: "analytics",
-        element: <AnalyticsPage />,
+        element: <Suspense fallback={<p>Loading...</p>}><AnalyticsPage /></Suspense>,
       },
     ],
   },
